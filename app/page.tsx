@@ -15,14 +15,14 @@ const SplineAnimation = dynamic(() => import("./components/SplineAnimation"), {
   loading: () => <p>Loading 3D model...</p>,
 });
 
+const apiKey = process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY || "";
 // Initialize Vapi with your public key
-const vapi = new Vapi("f01641f9-77a0-49a5-976f-723273b4dea7");
+const vapi = new Vapi(apiKey);
 
 // Log Vapi instance to check its configuration
 console.log("Vapi instance:", vapi);
 
 // Near the top of your file, after imports
-const apiKey = process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY || "";
 console.log("API Key:", apiKey); // Remove this in production
 
 // Use a pre-created assistant ID
