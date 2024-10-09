@@ -1,0 +1,31 @@
+import React from "react";
+import ScaleLoader from "react-spinners/ScaleLoader";
+
+const Button = ({ label, onClick, isLoading, disabled }) => {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled || isLoading}
+      className={`bg-white text-black border-2 border-gray-300 rounded-lg px-5 py-2 text-base font-medium shadow-md transition-all duration-300 ${
+        disabled || isLoading
+          ? "opacity-75 cursor-not-allowed"
+          : "hover:bg-gray-100"
+      }`}
+    >
+      {isLoading ? (
+        <ScaleLoader
+          color="#000"
+          height={10}
+          width={2.5}
+          margin={0.5}
+          loading={true}
+          css={{ display: "block", margin: "0 auto" }}
+        />
+      ) : (
+        label
+      )}
+    </button>
+  );
+};
+
+export default Button;
