@@ -1,40 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 interface EnhancedPromptSectionProps {
-  userQuery: string;
+  enhancedPrompt: string;
   onPromptChange: (newPrompt: string) => void;
 }
 
 const EnhancedPromptSection: React.FC<EnhancedPromptSectionProps> = ({
-  userQuery,
+  enhancedPrompt,
   onPromptChange,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [prompt, setPrompt] = useState("");
-
-  useEffect(() => {
-    // Here, you would typically call your backend to generate the enhanced prompt
-    // For now, we'll use a simple template
-    const enhancedPrompt = `You are a helpful voice assistant named Vapi. Your primary goal is to assist with pizza orders.
-
-User Query: ${userQuery}
-
-Based on the user's query, your response should:
-1. Address the specific topic or question raised
-2. Provide clear and concise information about our pizza menu
-3. Use a friendly and engaging tone suitable for voice interaction
-4. Guide the user towards placing an order if appropriate
-
-Remember to speak naturally and use appropriate pauses and intonation in your responses.`;
-
-    setPrompt(enhancedPrompt);
-    onPromptChange(enhancedPrompt);
-  }, [userQuery, onPromptChange]);
 
   const handlePromptChange = (
     event: React.ChangeEvent<HTMLTextAreaElement>
   ) => {
-    setPrompt(event.target.value);
     onPromptChange(event.target.value);
   };
 
@@ -51,7 +30,7 @@ Remember to speak naturally and use appropriate pauses and intonation in your re
       </div>
       {isExpanded && (
         <textarea
-          value={prompt}
+          value={enhancedPrompt}
           onChange={handlePromptChange}
           className="w-full h-64 p-2 border border-gray-300 rounded"
         />

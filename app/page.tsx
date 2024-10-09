@@ -1,13 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Vapi from "@vapi-ai/web";
 import ActiveCallDetail from "./components/ActiveCallDetail";
 import Button from "./components/base/Button";
 import { isPublicKeyMissingError } from "./utils";
-import EnhancedPromptSection from "./components/EnhancedPromptSelection";
+import { Anthropic } from "@anthropic-ai/sdk";
+import { useState, useEffect } from "react";
 
 // Dynamically import the SplineAnimation component
 const SplineAnimation = dynamic(() => import("./components/SplineAnimation"), {
@@ -39,8 +39,10 @@ const UserInputSection = () => {
 
   const [micActive, setMicActive] = useState(false);
   const [micPermission, setMicPermission] = useState("prompt");
+
   const [userQuery, setUserQuery] = useState("");
-  const [enhancedPrompt, setEnhancedPrompt] = useState("");
+  const [enhancedQuery, setEnhancedQuery] = useState("");
+  const [isEnhancing, setIsEnhancing] = useState(false);
 
   useEffect(() => {
     vapi.on("call-start", () => {
@@ -88,19 +90,40 @@ const UserInputSection = () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       console.log("Microphone access granted:", stream);
-      vapi.start({
+
+      // Create the full agent prompt by combining the template and enhanced query
+      const fullAgentPrompt = `
+You are a voice assistant for ${userQuery}, a business located on the Internet.
+
+Your job is to assist customers calling in. Be friendly, helpful, and efficient in your responses.
+
+1) Introduce yourself and the business when answering the call.
+2) Ask how you can help the customer today.
+3) Listen to the customer's request and respond appropriately.
+4) If the customer goes off-topic, politely steer the conversation back to how you can assist them.
+5) Once you've addressed the customer's needs, politely conclude the conversation.
+
+Remember:
+- Be kind of funny and witty!
+- Keep all your responses short and simple. Use casual language, phrases like "Umm...", "Well...", and "I mean" are preferred.
+- This is a voice conversation, so keep your responses short, like in a real conversation. Don't ramble for too long.
+      `;
+
+      // Update assistantOptions with the new agent prompt
+      const updatedAssistantOptions = {
         ...assistantOptions,
         model: {
           ...assistantOptions.model,
           messages: [
             {
               role: "system",
-              content:
-                enhancedPrompt || assistantOptions.model.messages[0].content,
+              content: fullAgentPrompt,
             },
           ],
         },
-      });
+      };
+
+      vapi.start(updatedAssistantOptions);
     } catch (error) {
       console.error("Error accessing microphone:", error);
       setConnecting(false);
@@ -114,55 +137,91 @@ const UserInputSection = () => {
     vapi.stop();
   };
 
+  const enhanceQuery = async () => {
+    setIsEnhancing(true);
+    try {
+      // Create a new template based on the user's input
+      const customTemplate = `
+You are ${userQuery}. Your persona is that of a seasoned customer support agent in your early 30s, combining deep technical knowledge with strong emotional intelligence. Your voice is clear, warm, and engaging, with a neutral accent for widespread accessibility.
+
+Your primary role is to serve as a dynamic training platform for customer support agents, simulating a broad array of service scenarios—from basic inquiries to intricate problem-solving challenges. Your advanced programming allows you to replicate diverse customer service situations, making you an invaluable tool for training purposes.
+
+Major Mode of Interaction:
+You interact mainly through audio, adeptly interpreting spoken queries and replying in kind. This capability makes you an excellent resource for training agents, preparing them for live customer interactions. You're engineered to recognize and adapt to the emotional tone of conversations, allowing trainees to practice managing emotional nuances effectively.
+
+Training Instructions:
+1. Encourage trainees to practice active listening by acknowledging every query with confirmation of your engagement, e.g., "Yes, I'm here. How can I help?"
+2. Emphasize the importance of clear, empathetic communication, tailored to the context of each interaction.
+3. Demonstrate how to handle complex or vague customer queries by asking open-ended questions for clarification, without appearing repetitive or artificial.
+4. Teach trainees to express empathy and understanding, especially when customers are frustrated or dissatisfied, ensuring issues are addressed with care and a commitment to resolution.
+5. Prepare agents to escalate calls smoothly to human colleagues when necessary, highlighting the value of personal touch in certain situations.
+
+Your overarching mission is to enhance the human aspect of customer support through comprehensive scenario-based training. You're not merely an answer machine but a sophisticated platform designed to foster the development of knowledgeable, empathetic, and adaptable customer support professionals.
+
+Remember:
+- Adapt your responses to simulate various customer personalities and scenarios.
+- Provide constructive feedback to trainees after each interaction.
+- Use a warm, engaging tone while maintaining professionalism.
+- Keep your responses concise and relevant to the current training scenario.
+- Encourage trainees to think critically and problem-solve independently.
+      `;
+
+      setEnhancedQuery(customTemplate);
+    } catch (error) {
+      console.error("Error enhancing query:", error);
+      setEnhancedQuery("Error: Unable to enhance query. Please try again.");
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
   return (
     <div className="w-full">
-      <input
-        type="text"
-        value={userQuery}
-        onChange={(e) => setUserQuery(e.target.value)}
-        placeholder="Enter your query for the voice agent"
-        className="w-full p-2 border border-gray-300 rounded mb-4"
-      />
-      <EnhancedPromptSection
-        userQuery={userQuery}
-        onPromptChange={setEnhancedPrompt}
-      />
-      {!connected ? (
-        <Button
-          label="Call Vapi's Pizza Front Desk"
-          onClick={startCallInline}
-          isLoading={connecting}
-        />
-      ) : (
-        <ActiveCallDetail
-          assistantIsSpeaking={assistantIsSpeaking}
-          volumeLevel={volumeLevel}
-          onEndCallClick={endCall}
-        />
-      )}
       {showPublicKeyInvalidMessage && <PleaseSetYourPublicKeyMessage />}
-      {connected && (
-        <div className={`mic-indicator ${micActive ? "active" : ""}`}>
-          Mic {micActive ? "Active" : "Inactive"}
+
+      <div className="">
+        <input
+          type="text"
+          value={userQuery}
+          onChange={(e) => setUserQuery(e.target.value)}
+          placeholder="Create Voice Assistant"
+          className="w-full p-2 border rounded-lg"
+        />
+        <div className="flex gap-4 mt-2">
+          <button
+            onClick={enhanceQuery}
+            disabled={isEnhancing}
+            className={`flex-1 bg-[#5FFECA] text-black p-2 rounded-lg ${
+              isEnhancing
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-blue-600"
+            }`}
+          >
+            {isEnhancing ? "Creating..." : "Enhance"}
+          </button>
+          <Button
+            label="Start Call with Enhanced Assistant"
+            onClick={startCallInline}
+            isLoading={connecting}
+            disabled={!enhancedQuery && !userQuery}
+            className="flex-1"
+          />
+        </div>
+      </div>
+      {enhancedQuery && (
+        <div className="mt-4">
+          <h3 className="font-bold">Enhanced Query:</h3>
+          <p>{enhancedQuery}</p>
         </div>
       )}
-      <div>
-        Microphone permission: {micPermission}
-        {micPermission !== "granted" && (
-          <button
-            onClick={() => navigator.mediaDevices.getUserMedia({ audio: true })}
-          >
-            Request Microphone Access
-          </button>
-        )}
-      </div>
     </div>
   );
 };
 
+// Update the assistantOptions object
 const assistantOptions = {
-  name: "Vapi's Pizza Front Desk",
-  firstMessage: "Vappy's Pizzeria speaking, how can I help you?",
+  name: "",
+  firstMessage: "Hello, How can I help you today?",
   transcriber: {
     provider: "deepgram",
     model: "nova-2",
@@ -178,42 +237,7 @@ const assistantOptions = {
     messages: [
       {
         role: "system",
-        content: `You are a voice assistant for Vappy's Pizzeria, a pizza shop located on the Internet.
-
-Your job is to take the order of customers calling in. The menu has only 3 types
-of items: pizza, sides, and drinks. There are no other types of items on the menu.
-
-1) There are 3 kinds of pizza: cheese pizza, pepperoni pizza, and vegetarian pizza
-(often called "veggie" pizza).
-2) There are 3 kinds of sides: french fries, garlic bread, and chicken wings.
-3) There are 2 kinds of drinks: soda, and water. (if a customer asks for a
-brand name like "coca cola", just let them know that we only offer "soda")
-
-Customers can only order 1 of each item. If a customer tries to order more
-than 1 item within each category, politely inform them that only 1 item per
-category may be ordered.
-
-Customers must order 1 item from at least 1 category to have a complete order.
-They can order just a pizza, or just a side, or just a drink.
-
-Be sure to introduce the menu items, don't assume that the caller knows what
-is on the menu (most appropriate at the start of the conversation).
-
-If the customer goes off-topic or off-track and talks about anything but the
-process of ordering, politely steer the conversation back to collecting their order.
-
-Once you have all the information you need pertaining to their order, you can
-end the conversation. You can say something like "Awesome, we'll have that ready
-for you in 10-20 minutes." to naturally let the customer know the order has been
-fully communicated.
-
-It is important that you collect the order in an efficient manner (succinct replies
-& direct questions). You only have 1 task here, and it is to collect the customers
-order, then end the conversation.
-
-- Be sure to be kind of funny and witty!
-- Keep all your responses short and simple. Use casual language, phrases like "Umm...", "Well...", and "I mean" are preferred.
-- This is a voice conversation, so keep your responses short, like in a real conversation. Don't ramble for too long.`,
+        content: "", // This will be filled with the enhanced query
       },
     ],
   },
@@ -247,33 +271,39 @@ const PleaseSetYourPublicKeyMessage = () => {
 };
 
 export default function Home() {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
 
   return (
     <div className="min-h-screen p-8 font-[family-name:var(--font-geist-sans)]">
-      <main className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+      <main className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start h-full">
         {/* Left half: Spline Animation */}
         <div className="w-full aspect-square md:aspect-auto md:h-[calc(100vh-4rem)] relative">
           <SplineAnimation isPlaying={isPlaying} />
-          <button
+          {/* <button
             onClick={() => setIsPlaying(!isPlaying)}
             className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
           >
             {isPlaying ? "Pause Animation" : "Play Animation"}
-          </button>
+          </button> */}
         </div>
 
         {/* Right half: User Input Section */}
-        <div className="flex flex-col gap-8">
-          <Image
-            className="dark:invert self-start"
-            src="https://nextjs.org/icons/next.svg"
-            alt="Next.js logo"
-            width={180}
-            height={38}
-            priority
-          />
-          <UserInputSection />
+        <div className="flex flex-col justify-center items-center h-[calc(100vh-4rem)]">
+          <div className="flex flex-col items-center gap-4 max-w-md">
+            <Image
+              className=""
+              src="/vapi.png"
+              alt="Vapi logo"
+              width={180}
+              height={38}
+              priority
+            />
+            <div className="text-center">
+              Enter a prompt like &quot;Bob at Boba Store&quot; and press the
+              &quot;button enhance&quot; prompt.
+            </div>
+            <UserInputSection />
+          </div>
         </div>
       </main>
     </div>
