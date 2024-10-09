@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Spline from "@splinetool/react-spline/next";
-import type { Application } from "@splinetool/runtime";
 
 const SplineAnimation = ({ isPlaying }: { isPlaying: boolean }) => {
   const [videoLoaded, setVideoLoaded] = useState(false);

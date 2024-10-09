@@ -31,14 +31,9 @@ const ASSISTANT_ID = "e4e0c8ca-6298-4c8a-9851-a3d5fb0d6992";
 // UserInputSection component (updated)
 const UserInputSection = () => {
   const [connecting, setConnecting] = useState(false);
-  const [connected, setConnected] = useState(false);
-  const [assistantIsSpeaking, setAssistantIsSpeaking] = useState(false);
-  const [volumeLevel, setVolumeLevel] = useState(0);
+
   const { showPublicKeyInvalidMessage, setShowPublicKeyInvalidMessage } =
     usePublicKeyInvalid();
-
-  const [micActive, setMicActive] = useState(false);
-  const [micPermission, setMicPermission] = useState("prompt");
 
   const [userQuery, setUserQuery] = useState("");
   const [enhancedQuery, setEnhancedQuery] = useState("");
