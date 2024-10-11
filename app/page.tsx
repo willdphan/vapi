@@ -3,10 +3,8 @@
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import Vapi from "@vapi-ai/web";
-// import ActiveCallDetail from "./components/ActiveCallDetail";  // Commented out if unused
 import Button from "./components/base/Button";
 import { isPublicKeyMissingError } from "./utils";
-// import { Anthropic } from "@anthropic-ai/sdk";  // Commented out if unused
 import { useState, useEffect } from "react";
 
 // Dynamically import the SplineAnimation component
@@ -25,11 +23,18 @@ console.log("Vapi instance:", vapi);
 // Near the top of your file, after imports
 console.log("API Key:", apiKey); // Remove this in production
 
-// Use a pre-created assistant ID
-// const ASSISTANT_ID = "e4e0c8ca-6298-4c8a-9851-a3d5fb0d6992";  // Commented out if unused
-
 // UserInputSection component (updated)
-const UserInputSection = () => {
+const UserInputSection = ({
+  setConnected,
+  setMicActive,
+  setAssistantIsSpeaking,
+  setVolumeLevel,
+}: {
+  setConnected: React.Dispatch<React.SetStateAction<boolean>>;
+  setMicActive: React.Dispatch<React.SetStateAction<boolean>>;
+  setAssistantIsSpeaking: React.Dispatch<React.SetStateAction<boolean>>;
+  setVolumeLevel: React.Dispatch<React.SetStateAction<number>>;
+}) => {
   const [connecting, setConnecting] = useState(false);
 
   const { showPublicKeyInvalidMessage, setShowPublicKeyInvalidMessage } =
@@ -79,7 +84,13 @@ const UserInputSection = () => {
     return () => {
       vapi.removeAllListeners();
     };
-  }, [setShowPublicKeyInvalidMessage]);
+  }, [
+    setShowPublicKeyInvalidMessage,
+    setConnected,
+    setMicActive,
+    setAssistantIsSpeaking,
+    setVolumeLevel,
+  ]);
 
   const startCallInline = async () => {
     setConnecting(true);
@@ -87,52 +98,34 @@ const UserInputSection = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       console.log("Microphone access granted:", stream);
 
-      // Create the full agent prompt by combining the template and enhanced query
-      const fullAgentPrompt = `
-You are a voice assistant for ${userQuery}, a business located on the Internet.
-
-Your job is to assist customers calling in. Be friendly, helpful, and efficient in your responses.
-
-1) Introduce yourself and the business when answering the call.
-2) Ask how you can help the customer today.
-3) Listen to the customer's request and respond appropriately.
-4) If the customer goes off-topic, politely steer the conversation back to how you can assist them.
-5) Once you've addressed the customer's needs, politely conclude the conversation.
-
-Remember:
-- Be kind of funny and witty!
-- Keep all your responses short and simple. Use casual language, phrases like "Umm...", "Well...", and "I mean" are preferred.
-- This is a voice conversation, so keep your responses short, like in a real conversation. Don't ramble for too long.
-      `;
-
-      // Update assistantOptions with the new agent prompt
       const updatedAssistantOptions = {
-        ...assistantOptions,
         model: {
-          ...assistantOptions.model,
+          provider: "openai" as const,
+          model: "gpt-3.5-turbo" as const, // Specify the exact model name
           messages: [
-            {
-              role: "system",
-              content: fullAgentPrompt,
-            },
+            { role: "system" as const, content: enhancedQuery },
+            { role: "user" as const, content: "Hello" },
           ],
+        },
+        name: "Ava",
+        firstMessage: "Hello, I'm Ava. How can I assist you today?",
+        transcriber: {
+          provider: "deepgram" as const,
+          model: "nova-2" as const,
+          language: "en-US" as const,
+        },
+        voice: {
+          provider: "11labs" as const,
+          voiceId: "paula",
         },
       };
 
-      vapi.start(updatedAssistantOptions);
+      await vapi.start(updatedAssistantOptions);
     } catch (error) {
-      console.error("Error accessing microphone:", error);
+      console.error("Error starting call:", error);
       setConnecting(false);
-      alert(
-        "Microphone access is required for this application to work. Please allow microphone access and try again."
-      );
     }
   };
-
-  // Commented out if unused
-  // const endCall = () => {
-  //   vapi.stop();
-  // };
 
   const enhanceQuery = async () => {
     setIsEnhancing(true);
@@ -201,7 +194,6 @@ Remember:
             onClick={startCallInline}
             isLoading={connecting}
             disabled={!enhancedQuery && !userQuery}
-            className="flex-1 "
           />
         </div>
       </div>
@@ -229,31 +221,6 @@ Remember:
       )}
     </div>
   );
-};
-
-// Update the assistantOptions object
-const assistantOptions = {
-  name: "",
-  firstMessage: "Hello, How can I help you today?",
-  transcriber: {
-    provider: "deepgram",
-    model: "nova-2",
-    language: "en-US",
-  },
-  voice: {
-    provider: "playht",
-    voiceId: "jennifer",
-  },
-  model: {
-    provider: "openai",
-    model: "gpt-4",
-    messages: [
-      {
-        role: "system",
-        content: "", // This will be filled with the enhanced query
-      },
-    ],
-  },
 };
 
 const usePublicKeyInvalid = () => {
@@ -284,7 +251,11 @@ const PleaseSetYourPublicKeyMessage = () => {
 };
 
 export default function Home() {
-  const [isPlaying] = useState(true); // Removed setIsPlaying if unused
+  const [isPlaying] = useState(true);
+  const [connected, setConnected] = useState(false);
+  const [micActive, setMicActive] = useState(false);
+  const [assistantIsSpeaking, setAssistantIsSpeaking] = useState(false);
+  const [volumeLevel, setVolumeLevel] = useState(0);
 
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)]">
@@ -310,7 +281,20 @@ export default function Home() {
               &quot;enhance&quot; to enhance prompt, then talk to the voice
               assistant!
             </div>
-            <UserInputSection />
+            <UserInputSection
+              setConnected={setConnected}
+              setMicActive={setMicActive}
+              setAssistantIsSpeaking={setAssistantIsSpeaking}
+              setVolumeLevel={setVolumeLevel}
+            />
+            {connected && (
+              <div>
+                <p>Connection status: {connected ? 'Connected' : 'Disconnected'}</p>
+                <p>Microphone: {micActive ? 'Active' : 'Inactive'}</p>
+                <p>Assistant: {assistantIsSpeaking ? 'Speaking' : 'Not speaking'}</p>
+                <p>Volume level: {volumeLevel}</p>
+              </div>
+            )}
           </div>
         </div>
       </main>

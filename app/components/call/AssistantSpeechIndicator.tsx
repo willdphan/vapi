@@ -1,6 +1,10 @@
 import React from "react";
 
-const AssistantSpeechIndicator = ({ isSpeaking }) => {
+interface AssistantSpeechIndicatorProps {
+  isSpeaking: boolean;
+}
+
+const AssistantSpeechIndicator: React.FC<AssistantSpeechIndicatorProps> = ({ isSpeaking }) => {
   return (
     <div className="flex items-center mb-2">
       <div

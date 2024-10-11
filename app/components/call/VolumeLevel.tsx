@@ -1,8 +1,12 @@
 import React from "react";
 
-const numBars = 10;
+interface VolumeLevelProps {
+  volume: number;
+}
 
-const VolumeLevel = ({ volume }) => {
+const VolumeLevel: React.FC<VolumeLevelProps> = ({ volume }) => {
+  const numBars = 10; // Define the number of volume bars
+
   return (
     <div className="p-5">
       <div className="text-white mb-2">

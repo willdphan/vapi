@@ -1,7 +1,14 @@
 import React from "react";
-import ScaleLoader from "react-spinners/ScaleLoader";
+import { ClipLoader } from "react-spinners";
 
-const Button = ({ label, onClick, isLoading, disabled }) => {
+interface ButtonProps {
+  label: string;
+  onClick: () => void;
+  isLoading: boolean;
+  disabled: boolean;
+}
+
+const Button: React.FC<ButtonProps> = ({ label, onClick, isLoading, disabled }) => {
   return (
     <button
       onClick={onClick}
@@ -13,13 +20,10 @@ const Button = ({ label, onClick, isLoading, disabled }) => {
       }`}
     >
       {isLoading ? (
-        <ScaleLoader
-          color="#000"
-          height={10}
-          width={2.5}
-          margin={0.5}
+        <ClipLoader
+          color={"#ffffff"}
           loading={true}
-          css={{ display: "block", margin: "0 auto" }}
+          size={20}
         />
       ) : (
         label
