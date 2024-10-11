@@ -284,7 +284,7 @@ const PleaseSetYourPublicKeyMessage = () => {
 };
 
 export default function Home() {
-  const [isPlaying] = useState(true);  // Removed setIsPlaying if unused
+  const [isPlaying] = useState(true); // Removed setIsPlaying if unused
 
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)]">
@@ -306,8 +306,8 @@ export default function Home() {
               priority
             />
             <div className="text-center text-sm md:text-base">
-              Enter a prompt like &quot;Bob at Boba Store&quot;, press the
-              &quot;enhance&quot; button, then talk to the enhanced voice
+              Enter a prompt like &quot;Bob at Boba Store&quot;, press
+              &quot;enhance&quot; to enhance prompt, then talk to the voice
               assistant!
             </div>
             <UserInputSection />
