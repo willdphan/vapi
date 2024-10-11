@@ -1,4 +1,5 @@
 // @ts-nocheck
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React from "react";
 
@@ -6,6 +7,10 @@ const ActiveCallDetail = ({
   assistantIsSpeaking,
   volumeLevel,
   onEndCallClick,
+}: {
+  assistantIsSpeaking: any;
+  volumeLevel: any;
+  onEndCallClick: any;
 }) => {
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-lg">
