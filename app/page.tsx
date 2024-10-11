@@ -3,10 +3,10 @@
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import Vapi from "@vapi-ai/web";
-import ActiveCallDetail from "./components/ActiveCallDetail";
+// import ActiveCallDetail from "./components/ActiveCallDetail";  // Commented out if unused
 import Button from "./components/base/Button";
 import { isPublicKeyMissingError } from "./utils";
-import { Anthropic } from "@anthropic-ai/sdk";
+// import { Anthropic } from "@anthropic-ai/sdk";  // Commented out if unused
 import { useState, useEffect } from "react";
 
 // Dynamically import the SplineAnimation component
@@ -26,7 +26,7 @@ console.log("Vapi instance:", vapi);
 console.log("API Key:", apiKey); // Remove this in production
 
 // Use a pre-created assistant ID
-const ASSISTANT_ID = "e4e0c8ca-6298-4c8a-9851-a3d5fb0d6992";
+// const ASSISTANT_ID = "e4e0c8ca-6298-4c8a-9851-a3d5fb0d6992";  // Commented out if unused
 
 // UserInputSection component (updated)
 const UserInputSection = () => {
@@ -129,9 +129,10 @@ Remember:
     }
   };
 
-  const endCall = () => {
-    vapi.stop();
-  };
+  // Commented out if unused
+  // const endCall = () => {
+  //   vapi.stop();
+  // };
 
   const enhanceQuery = async () => {
     setIsEnhancing(true);
@@ -283,7 +284,7 @@ const PleaseSetYourPublicKeyMessage = () => {
 };
 
 export default function Home() {
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying] = useState(true);  // Removed setIsPlaying if unused
 
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)]">
