@@ -50,7 +50,18 @@ Enhanced query:`,
       ],
     });
 
-    return NextResponse.json({ enhancedQuery: message.content[0].text });
+    let enhancedQuery = '';
+    if (message.content && message.content.length > 0) {
+      const firstContent = message.content[0];
+      if ('type' in firstContent && firstContent.type === 'text') {
+        enhancedQuery = firstContent.text;
+      } else {
+        console.error('Unexpected content format:', firstContent);
+        enhancedQuery = 'Error: Unable to process the enhanced query.';
+      }
+    }
+
+    return NextResponse.json({ enhancedQuery });
   } catch (error) {
     console.error('Error enhancing query:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
