@@ -38,6 +38,7 @@ const UserInputSection = () => {
   const [userQuery, setUserQuery] = useState("");
   const [enhancedQuery, setEnhancedQuery] = useState("");
   const [isEnhancing, setIsEnhancing] = useState(false);
+  const [showFullPrompt, setShowFullPrompt] = useState(false);
 
   useEffect(() => {
     vapi.on("call-start", () => {
@@ -180,16 +181,16 @@ Remember:
           value={userQuery}
           onChange={(e) => setUserQuery(e.target.value)}
           placeholder="Create Voice Assistant"
-          className="w-full p-2 border rounded-lg"
+          className="w-full p-2 border rounded-lg text-black"
         />
-        <div className="flex gap-4 mt-2">
+        <div className="flex gap-4 mt-5 ">
           <button
             onClick={enhanceQuery}
             disabled={isEnhancing}
             className={`flex-1 bg-[#5FFECA] text-black p-2 rounded-lg ${
               isEnhancing
                 ? "opacity-50 cursor-not-allowed"
-                : "hover:bg-blue-600"
+                : "hover:bg-[#1B6882]"
             }`}
           >
             {isEnhancing ? "Creating..." : "Enhance"}
@@ -199,14 +200,30 @@ Remember:
             onClick={startCallInline}
             isLoading={connecting}
             disabled={!enhancedQuery && !userQuery}
-            className="flex-1"
+            className="flex-1 "
           />
         </div>
       </div>
       {enhancedQuery && (
-        <div className="mt-4">
-          <h3 className="font-bold">Enhanced Query:</h3>
-          <p>{enhancedQuery}</p>
+        <div className="mt-4 text-center">
+          <h3 className="font-bold mb-[-1em] z-[99] bg-[#0A0A0A]">
+            Enhanced Query
+          </h3>
+          <div
+            className={`${
+              showFullPrompt
+                ? "max-h-80 overflow-y-auto"
+                : "max-h-20 overflow-hidden"
+            } transition-all duration-300 ease-in-out`}
+          >
+            <p className="whitespace-pre-wrap">{enhancedQuery}</p>
+          </div>
+          <button
+            onClick={() => setShowFullPrompt(!showFullPrompt)}
+            className="mt-2 text-[#5FFECA] hover:text-[#1B6882]"
+          >
+            {showFullPrompt ? "Show Less" : "Show More"}
+          </button>
         </div>
       )}
     </div>
@@ -269,33 +286,28 @@ export default function Home() {
   const [isPlaying, setIsPlaying] = useState(true);
 
   return (
-    <div className="min-h-screen p-8 font-[family-name:var(--font-geist-sans)]">
-      <main className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start h-full">
-        {/* Left half: Spline Animation */}
-        <div className="w-full aspect-square md:aspect-auto md:h-[calc(100vh-4rem)] relative">
+    <div className="min-h-screen font-[family-name:var(--font-geist-sans)]">
+      <main className="flex flex-col md:grid md:grid-cols-2 h-screen">
+        {/* Spline Animation */}
+        <div className="w-full h-1/2 md:h-full relative">
           <SplineAnimation isPlaying={isPlaying} />
-          {/* <button
-            onClick={() => setIsPlaying(!isPlaying)}
-            className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-          >
-            {isPlaying ? "Pause Animation" : "Play Animation"}
-          </button> */}
         </div>
 
-        {/* Right half: User Input Section */}
-        <div className="flex flex-col justify-center items-center h-[calc(100vh-4rem)]">
-          <div className="flex flex-col items-center gap-4 max-w-md">
+        {/* User Input Section */}
+        <div className="flex flex-col justify-center items-center h-1/2 md:h-full p-4 overflow-y-auto">
+          <div className="flex flex-col items-center gap-4 w-full max-w-md">
             <Image
-              className=""
+              className="w-32 md:w-44"
               src="/vapi.png"
               alt="Vapi logo"
               width={180}
               height={38}
               priority
             />
-            <div className="text-center">
-              Enter a prompt like &quot;Bob at Boba Store&quot; and press the
-              &quot;button enhance&quot; prompt.
+            <div className="text-center text-sm md:text-base">
+              Enter a prompt like &quot;Bob at Boba Store&quot;, press the
+              &quot;enhance&quot; button, then talk to the enhanced voice
+              assistant!
             </div>
             <UserInputSection />
           </div>
